@@ -20,7 +20,9 @@ API para crear posters de Albums con el codigo de Spotify
             10.Guárdalos, los necesitaremos más adelante.
 
   2️⃣ Instalar las Dependencias en Python
+  
       Abre la terminal y ejecuta:
+      
           pip install spotipy pillow requests colorthief      
 
 
