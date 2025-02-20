@@ -8,8 +8,8 @@ import textwrap
 import io
 
 # 📌 Configurar credenciales de Spotify
-CLIENT_ID = "TU_CLIENT_ID"
-CLIENT_SECRET = "TU_CLIENT_SECRET"
+CLIENT_ID = "215057e9933543fab8bde038c29ca38f"
+CLIENT_SECRET = "15e0a3967816499b963a543e0f58ba8c"
 
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(client_id=CLIENT_ID, client_secret=CLIENT_SECRET))
 
@@ -50,6 +50,43 @@ def obtener_codigo_spotify():
         print("⚠️ Advertencia: No se encontró 'spotify_code.png'. Se generará el póster sin el código de Spotify.")
         return None
 
+
+def get_system_font():
+    """Try to find a suitable system font."""
+    common_fonts = {
+        'darwin': [  # macOS
+            '/System/Library/Fonts/Helvetica.ttc',
+            '/System/Library/Fonts/SFNSDisplay.ttf',
+            '/Library/Fonts/Arial.ttf'
+        ],
+        'linux': [
+            '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+            '/usr/share/fonts/TTF/Arial.ttf'
+        ],
+        'win32': [
+            'C:\\Windows\\Fonts\\arial.ttf',
+            'C:\\Windows\\Fonts\\segoeui.ttf'
+        ]
+    }
+    
+    system = os.name if os.name != 'posix' else sys.platform
+    
+    # Try system-specific fonts first
+    if system in common_fonts:
+        for font_path in common_fonts[system]:
+            if os.path.exists(font_path):
+                return font_path
+    
+    # If no system fonts found, look for fonts in the script directory
+    local_fonts = ['GothamBold.ttf', 'GothamMedium.ttf', 'Arial.ttf']
+    for font in local_fonts:
+        font_path = os.path.join(script_dir, font)
+        if os.path.exists(font_path):
+            return font_path
+            
+    raise FileNotFoundError("No suitable fonts found. Please place GothamBold.ttf and GothamMedium.ttf in the script directory.")
+
+
 # 🎨 Generar el póster con título ajustado y Spotify Code más a la derecha
 def generar_poster(titulo, artista, imagen, paleta_colores, canciones, codigo_spotify):
     # 📜 Crear el lienzo con margen
@@ -69,14 +106,18 @@ def generar_poster(titulo, artista, imagen, paleta_colores, canciones, codigo_sp
 
     # 📌 Cargar fuentes con tamaño reducido para el título
     try:
-        font_titulo = ImageFont.truetype("GothamBold.ttf", 30)  # 📌 Reducido de 35 a 30
-        font_artista = ImageFont.truetype("GothamMedium.ttf", 26)  # 📌 Reducido de 28 a 26
-        font_canciones = ImageFont.truetype("GothamBold.ttf", 16)  # Negrita
-    except:
-        font_titulo = ImageFont.truetype("arial.ttf", 40)
-        font_artista = ImageFont.truetype("arial.ttf", 26)
-        font_canciones = ImageFont.truetype("arialbd.ttf", 18)  # Arial en negrita
-
+        system_font = get_system_font()
+        font_titulo = ImageFont.truetype(system_font, 30)
+        font_artista = ImageFont.truetype(system_font, 26)
+        font_canciones = ImageFont.truetype(system_font, 16)
+    except Exception as e:
+        print(f"Error loading fonts: {e}")
+        print("Using default PIL font as fallback")
+        # Use PIL's default font as last resort
+        font_titulo = ImageFont.load_default()
+        font_artista = ImageFont.load_default()
+        font_canciones = ImageFont.load_default()
+        
     # 📌 Ajustar el título en varias líneas sin colisionar con la paleta de colores
     max_ancho_titulo = (ancho // 2) + 80  # 📌 Más ancho sin colisionar con la paleta
     lineas_titulo = textwrap.wrap(titulo.upper(), width=25)  # Ajustado para mayor longitud
